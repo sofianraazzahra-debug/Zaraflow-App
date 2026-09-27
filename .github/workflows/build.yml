@@ -11,16 +11,26 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Build with Buildozer
-      uses: ArtemSBulgakov/buildozer-action@v1
-      id: buildozer
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        command: buildozer -v android debug
-        buildozer_version: master
+        python-version: '3.11'
 
-    - name: Upload artifact
+    - name: Prepare Android SDK & Buildozer Dependencies
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install -y build-arg ccache git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev libltdl-dev
+        pip install --upgrade pip
+        pip install --user cython==0.29.36 buildozer
+
+    - name: Run Buildozer
+      run: |
+        export PATH=$PATH:/home/runner/.local/bin
+        buildozer -v android debug
+
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: package
-        path: |
-          bin/*.apk
+        name: zaraflow-apk
+        path: bin/*.apk
